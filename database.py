@@ -1,6 +1,6 @@
 import os
 import sys
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, pool
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, pool, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 print("Initializing database module...", file=sys.stderr)
@@ -28,7 +28,7 @@ try:
     )
     # Test the connection
     with engine.connect() as conn:
-        result = conn.execute("SELECT 1")
+        result = conn.execute(text("SELECT 1"))
         print(f"✓ Database connection test successful", file=sys.stderr)
     
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
