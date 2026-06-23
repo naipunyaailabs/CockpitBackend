@@ -1,9 +1,12 @@
+import os
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# The channel_binding query param might cause issues with some psycopg2 versions.
-# If it fails, we can strip it, but we'll try the provided URL first.
-DATABASE_URL = "postgresql://neondb_owner:npg_F5DQfo7YLPzT@ep-green-wave-ate7kl18-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require"
+# Allow the database URL to come from an environment variable for deployment.
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://neondb_owner:npg_F5DQfo7YLPzT@ep-green-wave-ate7kl18-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require"
+)
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
