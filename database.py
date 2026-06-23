@@ -1,6 +1,9 @@
 import os
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text
+import sys
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, pool
 from sqlalchemy.orm import declarative_base, sessionmaker
+
+print("Initializing database module...", file=sys.stderr)
 
 # Allow the database URL to come from an environment variable for deployment.
 DATABASE_URL = os.getenv(
@@ -8,17 +11,31 @@ DATABASE_URL = os.getenv(
     "postgresql://neondb_owner:npg_F5DQfo7YLPzT@ep-green-wave-ate7kl18-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require"
 )
 
-# Try to create engine and test connection
+print(f"Database URL configured (length: {len(DATABASE_URL)})", file=sys.stderr)
+
+# Try to create engine and test connection with timeout
 engine = None
 SessionLocal = None
 Base = declarative_base()
 
 try:
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        connect_args={"connect_timeout": 5, "options": "-c statement_timeout=10000"},
+        echo=False
+    )
+    # Test the connection
+    with engine.connect() as conn:
+        result = conn.execute("SELECT 1")
+        print(f"✓ Database connection test successful", file=sys.stderr)
+    
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    print(f"✓ Database engine created successfully")
+    print(f"✓ Database engine created successfully", file=sys.stderr)
 except Exception as e:
-    print(f"✗ Database connection failed (will continue anyway): {e}")
+    print(f"✗ Database connection failed: {str(e)[:200]}", file=sys.stderr)
+    print(f"✗ Backend will run in read-only mode without database", file=sys.stderr)
     SessionLocal = None
     engine = None
 

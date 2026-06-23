@@ -1,8 +1,11 @@
 import json
 import os
+import sys
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+print("Starting Cockpit Backend...", file=sys.stderr)
 
 app = FastAPI()
 
@@ -20,13 +23,22 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "healthy"}
 
-from database import SessionLocal, Project, Allocation, TeamMember, Task
+try:
+    from database import SessionLocal, Project, Allocation, TeamMember, Task
+    print("✓ Database module imported successfully", file=sys.stderr)
+except Exception as e:
+    print(f"✗ Failed to import database: {e}", file=sys.stderr)
+    SessionLocal = None
+    Project = None
+    Allocation = None
+    TeamMember = None
+    Task = None
 
 def load_data():
     if SessionLocal is None:
-        print("Database not available, returning empty data")
+        print("⚠ Database not available, returning empty dataset", file=sys.stderr)
         return {
             "tables": {
                 "projects": {"rows": []},
@@ -36,21 +48,33 @@ def load_data():
             }
         }
     
-    db = SessionLocal()
+    try:
+        db = SessionLocal()
+    except Exception as e:
+        print(f"✗ Could not create database session: {e}", file=sys.stderr)
+        return {
+            "tables": {
+                "projects": {"rows": []},
+                "allocations": {"rows": []},
+                "team_members": {"rows": []},
+                "tasks": {"rows": []}
+            }
+        }
+    
     try:
         def to_dict(obj):
             return {k: v for k, v in obj.__dict__.items() if not k.startswith('_')}
             
         return {
             "tables": {
-                "projects": {"rows": [to_dict(p) for p in db.query(Project).all()]},
-                "allocations": {"rows": [to_dict(a) for a in db.query(Allocation).all()]},
-                "team_members": {"rows": [to_dict(t) for t in db.query(TeamMember).all()]},
-                "tasks": {"rows": [to_dict(t) for t in db.query(Task).all()]}
+                "projects": {"rows": [to_dict(p) for p in db.query(Project).all()] if Project else []},
+                "allocations": {"rows": [to_dict(a) for a in db.query(Allocation).all()] if Allocation else []},
+                "team_members": {"rows": [to_dict(t) for t in db.query(TeamMember).all()] if TeamMember else []},
+                "tasks": {"rows": [to_dict(t) for t in db.query(Task).all()] if Task else []}
             }
         }
     except Exception as e:
-        print(f"Error loading data: {e}")
+        print(f"✗ Error loading data: {e}", file=sys.stderr)
         return {
             "tables": {
                 "projects": {"rows": []},
@@ -60,7 +84,10 @@ def load_data():
             }
         }
     finally:
-        db.close()
+        try:
+            db.close()
+        except:
+            pass
 
 @app.get("/api/dashboard")
 def get_dashboard_data():
