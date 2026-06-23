@@ -25,6 +25,17 @@ def health():
 from database import SessionLocal, Project, Allocation, TeamMember, Task
 
 def load_data():
+    if SessionLocal is None:
+        print("Database not available, returning empty data")
+        return {
+            "tables": {
+                "projects": {"rows": []},
+                "allocations": {"rows": []},
+                "team_members": {"rows": []},
+                "tasks": {"rows": []}
+            }
+        }
+    
     db = SessionLocal()
     try:
         def to_dict(obj):
@@ -36,6 +47,16 @@ def load_data():
                 "allocations": {"rows": [to_dict(a) for a in db.query(Allocation).all()]},
                 "team_members": {"rows": [to_dict(t) for t in db.query(TeamMember).all()]},
                 "tasks": {"rows": [to_dict(t) for t in db.query(Task).all()]}
+            }
+        }
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return {
+            "tables": {
+                "projects": {"rows": []},
+                "allocations": {"rows": []},
+                "team_members": {"rows": []},
+                "tasks": {"rows": []}
             }
         }
     finally:

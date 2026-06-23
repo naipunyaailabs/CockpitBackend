@@ -8,10 +8,19 @@ DATABASE_URL = os.getenv(
     "postgresql://neondb_owner:npg_F5DQfo7YLPzT@ep-green-wave-ate7kl18-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require"
 )
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
+# Try to create engine and test connection
+engine = None
+SessionLocal = None
 Base = declarative_base()
+
+try:
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    print(f"✓ Database engine created successfully")
+except Exception as e:
+    print(f"✗ Database connection failed (will continue anyway): {e}")
+    SessionLocal = None
+    engine = None
 
 class Project(Base):
     __tablename__ = "projects"
