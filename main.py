@@ -14,11 +14,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "p", "portal_full_db_snapshot.json")
+from .database import SessionLocal, Project, Allocation, TeamMember, Task
 
 def load_data():
-    with open(DATA_PATH, 'r', encoding='utf-8') as f:
-        return json.load(f)
+    db = SessionLocal()
+    try:
+        def to_dict(obj):
+            return {k: v for k, v in obj.__dict__.items() if not k.startswith('_')}
+            
+        return {
+            "tables": {
+                "projects": {"rows": [to_dict(p) for p in db.query(Project).all()]},
+                "allocations": {"rows": [to_dict(a) for a in db.query(Allocation).all()]},
+                "team_members": {"rows": [to_dict(t) for t in db.query(TeamMember).all()]},
+                "tasks": {"rows": [to_dict(t) for t in db.query(Task).all()]}
+            }
+        }
+    finally:
+        db.close()
 
 @app.get("/api/dashboard")
 def get_dashboard_data():
