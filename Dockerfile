@@ -3,14 +3,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy requirements and install
-COPY backend/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code and the p directory containing the database json
-COPY backend/ ./backend/
-COPY p/ ./p/
-
-WORKDIR /app/backend
+COPY . .
 
 EXPOSE 8005
 
