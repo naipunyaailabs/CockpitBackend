@@ -22,7 +22,7 @@ def root():
 def health():
     return {"status": "ok"}
 
-from .database import SessionLocal, Project, Allocation, TeamMember, Task
+from database import SessionLocal, Project, Allocation, TeamMember, Task
 
 def load_data():
     db = SessionLocal()
