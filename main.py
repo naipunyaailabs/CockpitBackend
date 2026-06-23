@@ -14,6 +14,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "Cockpit backend is running"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 from .database import SessionLocal, Project, Allocation, TeamMember, Task
 
 def load_data():
