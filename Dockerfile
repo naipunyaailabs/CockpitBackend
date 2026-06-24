@@ -1,14 +1,12 @@
-FROM python:3.11-slim
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy requirements and install
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY package*.json ./
+RUN npm ci --only=production
 
-# Copy backend code and the p directory containing the database json
 COPY . .
 
 EXPOSE 8005
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8005"]
+CMD ["node", "index.js"]

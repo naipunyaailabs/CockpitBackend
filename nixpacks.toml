@@ -1,0 +1,5 @@
+[build]
+builder = "docker"
+
+[start]
+cmd = "node index.js"
