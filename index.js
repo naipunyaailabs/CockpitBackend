@@ -162,6 +162,8 @@ app.get('/api/dashboard', async (_req, res) => {
     const ignoreBlockers = new Set(['none', 'no', 'hi', 'hello', 'completed']);
 
     for (const task of rawTasks) {
+      if (task.status === 'Completed') continue; // Completed tasks cannot have active blockers
+      
       const blockerText = task.blocker;
       if (blockerText && !ignoreBlockers.has(String(blockerText).trim().toLowerCase())) {
         const pName = task.project_name;
